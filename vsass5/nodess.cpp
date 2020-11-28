@@ -1,6 +1,8 @@
 #include "node.h"
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include<bits/stdc++.h>
 
 
 //precondition: pass two vectors( one for postions of vertices and the other for value) and the size of the vector
@@ -108,6 +110,58 @@ void edgecontainer::printall(std::vector<edgecontainer> all)
     }
 }
 
+//precondition: pass unloaded graph in
+//postcondition: loads the graph
+void loadgraph(std::ifstream &in, std::vector<edgecontainer> &graph)
+{
+
+    //initialization
+    int totalvertices=0;
+    std::string firstwords;
+    int numbers;
+    int fnum;
+    int snum;
+    int fpos;
+    int spos;
+
+    in.open("github-graph_V1.0.txt"); //opening file
+
+    //taking out string
+    getline(in, firstwords,'\n');
+
+    //adding numbers to the list
+    while(!in.eof())
+    {
+        in>>numbers;
+        if(!findingb(graph, numbers))
+        {
+            edgecontainer newnod;
+            newnod.setnum(numbers);
+            graph.push_back(newnod);
+        }
+    }
+    in.close();
+
+
+    //opening it up again
+    in.open("github-graph_V1.0.txt");
+    getline(in, firstwords,'\n');
+
+    //adding all the connections
+    while(!in.eof())
+    {
+        in>>fnum;
+        in>>snum;
+        fpos =finding(graph, fnum);
+        spos= finding(graph, snum);
+        if(graph[fpos].getnode(snum)==-1)
+        {
+            graph[fpos].pushnode(spos);
+        }
+    }
+    in.close();
+}
+
 //precondition: pass graph vector of edge class and number
 //postcondition: returns true if number is found in class and false if not
 bool findingb(std::vector<edgecontainer> graph, int number)
@@ -156,7 +210,7 @@ void maxfollowers(std::vector<edgecontainer> all)
     for(int i =0; i<all.size();i++)
     {
 
-        total = inDegree(all,i);
+        total = inDegree(all,i) + all[i].gettotconnect();
         bundle.push_back(i); // associated value or vertex
         totfollows.push_back(total);
     }
@@ -192,15 +246,15 @@ void median(std::vector<edgecontainer> all)
     for(int i =0; i<all.size();i++)
     {
 
-        total = all[i].gettotconnect(); //getting total connections
+        total = inDegree(all,i) + all[i].gettotconnect(); //getting total connections
         bundle.push_back(i); // associated value or vertex
         totfollows.push_back(total);
     }
 
     bubble(totfollows,bundle,totfollows.size()); //sorting the vector
 
-   /* for(int i=0;i<totfollows.size();i++)
-       std::cout<<bundle[i]<<": "<<totfollows[i]<<std::endl;*/
+  /* for(int i=0;i<totfollows.size();i++)
+       std::cout<<all[bundle[i]].getnum()<<": "<<totfollows[i]<<std::endl;*/
 
     //find the median
     int sizeofvec = totfollows.size();
@@ -216,9 +270,104 @@ void median(std::vector<edgecontainer> all)
     {
         pos = (sizeofvec/2) + 1;
         med = totfollows[pos];
-        std::cout<<"The median of all connections is : "<<med<< " at the vertex: "<<bundle[pos]<<std::endl;
+        std::cout<<"The median of all connections is : "<<med<< " at the vertex: "<<all[bundle[pos]].getnum()<<std::endl;
 
     }
 
 
+}
+
+//precondition: pass graph in
+//postcondition: returns the average number of connections
+void average(std::vector<edgecontainer> all)
+{
+    int total; //value for storing all connections
+    std::vector<int> totfollows; //for storing the indegree values and their vertices
+    std::vector<int> bundle; //for holding corresponding positions
+
+    for(int i =0; i<all.size();i++)
+    {
+
+        total = inDegree(all,i) + all[i].gettotconnect(); //getting total connections
+        bundle.push_back(i); // associated value or vertex
+        totfollows.push_back(total);
+    }
+
+    bubble(totfollows,bundle,totfollows.size()); //sorting the vector
+
+  /* for(int i=0;i<totfollows.size();i++)
+       std::cout<<all[bundle[i]].getnum()<<": "<<totfollows[i]<<std::endl;*/
+
+    //find the median
+    int sizeofvec = totfollows.size();
+    int avg;
+    int tot=0;
+
+    //sum all values
+    for(int i =0; i<sizeofvec;i++)
+    {
+        tot+= totfollows[i];
+    }
+
+    avg = tot/sizeofvec;
+
+    std::cout<<" The average of all connections is : "<< avg<<std::endl;
+
+
+
+}
+
+//precondition: pass the node values, and the graph vector
+//postcondition: returns a graphic representation of the shortest path between the nodes
+void shortestpath(int start, int destination, std::vector<edgecontainer> all)
+{
+
+
+}
+
+
+// precondition : call function
+//postcondition: return option selected by user
+int option()
+{
+
+    int num;
+    std::cout<<"Select an option from the list below:\n"
+        <<"\n0 for quiting\n"
+        <<"1. Display top ten most connected nodes\n"
+        <<"2. Display the median number of connections\n"
+        <<"3. Display the average number of connections\n"
+        <<"4. Display the shortest path between 2 nodes\n";
+    std::cin>> num;
+    return num;
+
+}
+
+//precondtion: pass the option selection
+//postcondition: perform action
+void decision(int NumOfNums, std::vector<edgecontainer> all)
+{
+    switch(NumOfNums)
+    {
+    case 1: //finding the 10 ten most connected
+        maxfollowers(all);
+        break;
+    case 2: //finding median
+        median(all);
+        break;
+    case 3: //finding average
+        average(all);
+        break;
+    case 4:
+        int start;
+        int ending;
+        std::cout<<"What is the start value? \n";
+        std::cin>>start;
+        std::cout<<"What is the end value? \n";
+        std::cin>>ending;
+        shortestpath(start,ending,all);
+        break;
+    default:
+        std::cout<<"not valid\n";
+    };
 }
